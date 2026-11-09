@@ -9,12 +9,14 @@
 int numbers[SIZE] = {7, 12, 19, 3, 18, 4, 2, -5, 6, 15, 8};
 int sorted[SIZE];
 
-typedef struct {
+typedef struct
+{
     int *start;
     int count;
 } SortParams;
 
-typedef struct {
+typedef struct
+{
     SortParams left;
     SortParams right;
 } MergeParams;
@@ -40,13 +42,16 @@ void *sorter(void *param)
     int temp;
 
     // Get the subarray description passed in by main
-    part = (SortParams *) param;
+    part = (SortParams *)param;
 
     // Bubble sort: make count-1 passes over the subarray
-    for (i = 0; i < part->count - 1; i++) {
+    for (i = 0; i < part->count - 1; i++)
+    {
         // Compare each neighboring pair and swap if out of order
-        for (j = 0; j < part->count - 1 - i; j++) {
-            if (part->start[j] > part->start[j + 1]) {
+        for (j = 0; j < part->count - 1 - i; j++)
+        {
+            if (part->start[j] > part->start[j + 1])
+            {
                 temp = part->start[j];
                 part->start[j] = part->start[j + 1];
                 part->start[j + 1] = temp;
@@ -66,14 +71,18 @@ void *merger(void *param)
     int k = 0;
 
     // get the information for both halves
-    parts = (MergeParams *) param;
+    parts = (MergeParams *)param;
 
     // Compare the numbers in each half and add the smaller one
-    while (i < parts->left.count && j < parts->right.count) {
-        if (parts->left.start[i] <= parts->right.start[j]) {
+    while (i < parts->left.count && j < parts->right.count)
+    {
+        if (parts->left.start[i] <= parts->right.start[j])
+        {
             sorted[k] = parts->left.start[i];
             i++;
-        } else {
+        }
+        else
+        {
             sorted[k] = parts->right.start[j];
             j++;
         }
@@ -81,14 +90,16 @@ void *merger(void *param)
     }
 
     // Add any numbers left in the first half
-    while (i < parts->left.count) {
+    while (i < parts->left.count)
+    {
         sorted[k] = parts->left.start[i];
         i++;
         k++;
     }
 
     // Add any numbers left in the second half
-    while (j < parts->right.count) {
+    while (j < parts->right.count)
+    {
         sorted[k] = parts->right.start[j];
         j++;
         k++;
@@ -98,7 +109,62 @@ void *merger(void *param)
     pthread_exit(NULL);
 }
 
+// Add Thread creation and joining code below
+int run_threads(SortParams *left, SortParams *right, MergeParams *merge_params)
+{
+    pthread_t sort1, sort2, merge;
+    int result;
 
-// Add the thread creation and joining code below
+    // Create the first sorting thread
+    result = pthread_create(&sort1, NULL, sorter, left);
+    if (result != 0)
+    {
+        fprintf(stderr, "Error creating first sorting thread: %d\n", result);
+        return 1;
+    }
+
+    // Create the second sorting thread
+    result = pthread_create(&sort2, NULL, sorter, right);
+    if (result != 0)
+    {
+        fprintf(stderr, "Error creating second sorting thread: %d\n", result);
+        pthread_join(sort1, NULL);
+        return 1;
+    }
+
+    // Wait for both sorting threads to finish
+    result = pthread_join(sort1, NULL);
+    if (result != 0)
+    {
+        fprintf(stderr, "Error joining first sorting thread: %d\n", result);
+        pthread_join(sort2, NULL);
+        return 1;
+    }
+
+    result = pthread_join(sort2, NULL);
+    if (result != 0)
+    {
+        fprintf(stderr, "Error joining second sorting thread: %d\n", result);
+        return 1;
+    }
+
+    // Create the merging thread
+    result = pthread_create(&merge, NULL, merger, merge_params);
+    if (result != 0)
+    {
+        fprintf(stderr, "Error creating merging thread: %d\n", result);
+        return 1;
+    }
+
+    // Wait for the merging thread to finish
+    result = pthread_join(merge, NULL);
+    if (result != 0)
+    {
+        fprintf(stderr, "Error joining merging thread: %d\n", result);
+        return 1;
+    }
+
+    return 0;
+}
 
 // Add main() below
