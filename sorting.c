@@ -28,6 +28,7 @@ void setup_parts(SortParams *left, SortParams *right)
     right->count = SIZE - SIZE / 2;
 }
 
+// Sorting thread: sorts one subarray in place using bubble sort
 void *sorter(void *param)
 {
     SortParams *part = (SortParams *)param;
@@ -44,6 +45,8 @@ void *sorter(void *param)
     }
     return NULL;
 }
+
+// Merging thread: merges the two sorted halves into the result array
 void *merger(void *param)
 {
     MergeParams *parts = (MergeParams *)param;
@@ -66,6 +69,8 @@ void *merger(void *param)
 
     return NULL;
 }
+
+// Creates and joins the two sorting threads, then the merging thread
 int run_threads(SortParams *left, SortParams *right, MergeParams *merge_params)
 {
     pthread_t sort1, sort2, merge;
