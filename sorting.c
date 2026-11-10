@@ -52,6 +52,7 @@ void *merger(void *param)
     MergeParams *parts = (MergeParams *)param;
     int i = 0, j = 0, k = 0;
 
+    // Compare the front of each half and take the smaller one
     while (i < parts->left.count && j < parts->right.count) {
         if (parts->left.start[i] <= parts->right.start[j]) {
             sorted[k++] = parts->left.start[i++];
@@ -59,10 +60,11 @@ void *merger(void *param)
             sorted[k++] = parts->right.start[j++];
         }
     }
+    // Copy whatever is left in the first half
     while (i < parts->left.count) {
         sorted[k++] = parts->left.start[i++];
     }
-
+    // Copy whatever is left in the second half
     while (j < parts->right.count) {
         sorted[k++] = parts->right.start[j++];
     }
